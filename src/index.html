@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rubik's Cube Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #rubiks-cube {
+            width: 300px;
+            height: 300px;
+        }
+        .controls {
+            margin-top: 20px;
+        }
+        .controls button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        #sequence {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/110/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@cubing/cubing.js"></script>
+</head>
+<body>
+    <h1>Rubik's Cube Visualizer</h1>
+    <div id="rubiks-cube"></div>
+    <div id="sequence">Sequence: </div>
+    <div class="controls">
+        <button onclick="startAnimation()">Start/Continue</button>
+        <button onclick="stopAnimation()">Stop</button>
+        <button onclick="resetCube()">Reset</button>
+        <button onclick="generateNewSequence()">New Sequence</button>
+    </div>
+
+    <script>
+        let cube;
+        let animationId;
+        let moves = [];
+        let moveIndex = 0;
+        let isAnimating = false;
+
+        function generateRandomSequence() {
+            const possibleMoves = ["R", "R'", "R2", "L", "L'", "L2", "U", "U'", "U2", "D", "D'", "D2", "F", "F'", "F2", "B", "B'", "B2"];
+            moves = Array.from({ length: 10 }, () => possibleMoves[Math.floor(Math.random() * possibleMoves.length)]);
+            document.getElementById('sequence').textContent = `Sequence: ${moves.join(' ')}`;
+        }
+
+        function initCube() {
+            const targetElement = document.getElementById('rubiks-cube');
+            cube = new cubing.TwistyPlayer({
+                puzzle: '3x3x3',
+                targetElement: targetElement,
+                width: 300,
+                height: 300
+            });
+        }
+
+        function startAnimation() {
+            if (isAnimating || moveIndex >= moves.length) return;
+            isAnimating = true;
+            animateMoves();
+        }
+
+        function stopAnimation() {
+            isAnimating = false;
+            cancelAnimationFrame(animationId);
+        }
+
+        function resetCube() {
+            stopAnimation();
+            moveIndex = 0;
+            cube.algorithm = ""; // Reset the cube by clearing the algorithm
+        }
+
+        function generateNewSequence() {
+            resetCube();
+            generateRandomSequence();
+        }
+
+        function animateMoves() {
+            if (moveIndex >= moves.length || !isAnimating) {
+                stopAnimation();
+                return;
+            }
+            cube.algorithm += moves[moveIndex] + " "; // Add the next move to the cube's algorithm
+            moveIndex++;
+            animationId = setTimeout(animateMoves, 1000); // Add a delay for visualization
+        }
+
+        // Initialize the cube and sequence on load
+        window.onload = () => {
+            initCube();
+            generateRandomSequence();
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Rubik's Cube</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden; /* Prevents scrollbars from appearing */
+        }
+        canvas {
+            display: block; /* Ensures the canvas takes up the full screen */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="rubiks-cube"></canvas>
+
+    <script type="module">
+        // Import necessary modules from the Three.js library
+        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js';
+        import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/controls/OrbitControls.js';
+
+        // Set up the scene where all objects are added
+        const scene = new THREE.Scene();
+
+        // Set up the camera to view the 3D scene
+        const camera = new THREE.PerspectiveCamera(
+            75, // Field of view in degrees
+            window.innerWidth / window.innerHeight, // Aspect ratio
+            0.1, // Near clipping plane
+            1000 // Far clipping plane
+        );
+
+        // Set up the renderer to display the scene on the canvas
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('rubiks-cube') });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Create a group to hold all the small cubes that form the Rubik's Cube
+        const cubeGroup = new THREE.Group();
+        scene.add(cubeGroup);
+
+        // Define colors for the faces of the Rubik's Cube
+        const colors = ["white", "yellow", "blue", "green", "red", "orange"];
+
+        // Function to create a single cube with colored faces
+        const createCube = (x, y, z) => {
+            const geometry = new THREE.BoxGeometry(); // Defines the shape of the cube
+            // Map each color to a face of the cube
+            const materials = colors.map(color => new THREE.MeshBasicMaterial({ color }));
+            const cube = new THREE.Mesh(geometry, materials); // Combine geometry and materials
+            cube.position.set(x, y, z); // Set the cube's position
+            return cube;
+        };
+
+        const size = 3; // Number of cubes along each dimension
+        const offset = (size - 1) / 2; // Offset to center the Rubik's Cube
+
+        // Loop through positions to create the Rubik's Cube structure
+        for (let x = 0; x < size; x++) {
+            for (let y = 0; y < size; y++) {
+                for (let z = 0; z < size; z++) {
+                    // Only create cubes on the outer shell of the Rubik's Cube
+                    if (x === 0 || x === size - 1 || y === 0 || y === size - 1 || z === 0 || z === size - 1) {
+                        const cube = createCube(x - offset, y - offset, z - offset);
+                        cubeGroup.add(cube); // Add the cube to the group
+                    }
+                }
+            }
+        }
+
+        // Set up OrbitControls to allow user interaction (rotation)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Smooth interaction
+        controls.dampingFactor = 0.05; // Damping factor for smoother motion
+
+        // Position the camera so the Rubik's Cube is in view
+        camera.position.set(4, 4, 6);
+        camera.lookAt(scene.position); // Ensure the camera points to the center of the scene
+
+        // Animation loop to continuously render the scene
+        const animate = () => {
+            requestAnimationFrame(animate); // Schedule the next frame
+            controls.update(); // Update controls for smooth interactions
+            renderer.render(scene, camera); // Render the scene from the camera's perspective
+        };
+
+        animate(); // Start the animation loop
+
+        // Handle resizing of the window
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; // Update aspect ratio
+            camera.updateProjectionMatrix(); // Recalculate camera projection
+            renderer.setSize(window.innerWidth, window.innerHeight); // Adjust renderer size
+        });
+    </script>
+</body>
+</html>
